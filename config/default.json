@@ -1,0 +1,24 @@
+{
+  "port": 3000,
+  "db": {
+    "host": "encodot-db",
+    "port": 5432,
+    "database": "encodot",
+    "username": "encodot",
+    "password": "encodot",
+    "synchronize": true
+  },
+  "logger": {
+    "console": {
+      "enabled": true,
+      "level": "trace"
+    },
+    "rotatingFile": {
+      "enabled": false,
+      "level": "info",
+      "path": "/var/log/encodot-api.log",
+      "period": "1d",
+      "count": 3
+    }
+  }
+}

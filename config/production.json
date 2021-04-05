@@ -1,0 +1,15 @@
+{
+  "logger": {
+    "console": {
+      "enabled": false,
+      "level": "trace"
+    },
+    "rotatingFile": {
+      "enabled": true,
+      "level": "info",
+      "path": "/var/log/encodot-api.log",
+      "period": "1d",
+      "count": 3
+    }
+  }
+}
