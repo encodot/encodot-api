@@ -7,7 +7,7 @@ services:
       tag: greenit-api
       target: development
     volumes:
-      - ./api:/usr/src/app
+      - .:/usr/src/app
       - /usr/src/app/node_modules
     networks:
       - greenit-net

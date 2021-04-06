@@ -20,5 +20,11 @@
       "period": "1d",
       "count": 3
     }
+  },
+  "encryption": {
+    "urlKeyLength": 40,
+    "aesKeyLength": 256,
+    "aesIterations": 100,
+    "rsaKeyLength": 2048
   }
 }
