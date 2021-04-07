@@ -8,4 +8,4 @@ Run database container: `docker run --name encodot-db -e POSTGRES_USER=encodot -
 
 Build api image: `docker image build --target development -t encodot-api .`
 
-Run api container: `docker container run --network encodot-net -p 3000:3000 --name encodot-api -e NODE_ENV=development encodot-api npm run start:dev`
+Run api container: `docker container run --network encodot-net -p 3000:3000 --name encodot-api -v $(pwd):/usr/src/app -e NODE_ENV=development encodot-api npm run start:dev`
