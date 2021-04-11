@@ -24,7 +24,9 @@ export class MessageService {
     @InjectRepository(MessageRepository) private msgRepo: MessageRepository,
     @InjectRepository(KeyRepository) private keyRepo: KeyRepository,
     private aes: AesService
-  ) {}
+  ) {
+    logger.setContext('MessageService');
+  }
 
   public async getKey(): Promise<Key> {
     const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair(rsaKeyLength);

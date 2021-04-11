@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Message extends BaseEntity {
@@ -9,5 +9,8 @@ export class Message extends BaseEntity {
 
   @Column()
   public message: string;
+
+  @CreateDateColumn()
+  public created: Date;
 
 }

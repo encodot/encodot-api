@@ -26,5 +26,9 @@
     "aesKeyLength": 256,
     "aesIterations": 100,
     "rsaKeyLength": 2048
+  },
+  "tasks": {
+    "keyLifetimeSeconds": 60,
+    "messageLifetimeSeconds": 36000
   }
 }

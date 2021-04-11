@@ -6,6 +6,7 @@ import { KeyRepository } from './key.repository';
 import { MessageController } from './message.controller';
 import { MessageRepository } from './message.repository';
 import { MessageService } from './message.service';
+import { MessageTasksService } from './message-tasks.service';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { MessageService } from './message.service';
     AesModule
   ],
   providers: [
-    MessageService
+    MessageService,
+    MessageTasksService
   ],
   controllers: [
     MessageController
