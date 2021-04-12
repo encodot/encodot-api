@@ -1,8 +1,8 @@
 {
   "logger": {
     "console": {
-      "enabled": false,
-      "level": "trace"
+      "enabled": true,
+      "level": "debug"
     },
     "rotatingFile": {
       "enabled": true,
@@ -11,5 +11,8 @@
       "period": "1d",
       "count": 3
     }
+  },
+  "db": {
+    "host": "localhost"
   }
 }
