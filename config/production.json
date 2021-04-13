@@ -5,7 +5,7 @@
       "level": "debug"
     },
     "rotatingFile": {
-      "enabled": true,
+      "enabled": false,
       "level": "info",
       "path": "/var/log/encodot-api.log",
       "period": "1d",
