@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { createCipheriv, createDecipheriv, createHmac, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
+import { ApiLogger } from '../../logger/api-logger';
 import { TransitMsg } from './models/transit-msg.model';
 
 @Injectable()
 export class AesService {
 
-  public async encrypt(message: string, password: string): Promise<string> {
+  public constructor(
+    private logger: ApiLogger
+  ) {
+    logger.setContext('AesService');
+  }
+
+  public async encrypt(message: string, password: string): Promise<string> {    
     const salt = randomBytes(16);
     const iv = randomBytes(16);
 
@@ -22,6 +29,10 @@ export class AesService {
 
     const hmac = createHmac('sha256', password).update(encrypted).digest();
 
+    this.logger.log(`Password: ${password}`);
+    this.logger.log(`Hmac: ${hmac.toString('base64')}`);
+    this.logger.log(`Encrypted: ${encrypted.toString('base64')}`);
+
     encrypted.toString('base64');
 
     return this.getTransitMsgStr(hmac, salt, iv, encrypted);
@@ -32,6 +43,11 @@ export class AesService {
     const key = await this.deriveKeyFromPassword(password, salt);
 
     const hmac = createHmac('sha256', password).update(encrypted).digest();
+
+    this.logger.log(`Password: ${password}`);
+    this.logger.log(`Transit hmac: ${transitHmac.toString('base64')}`);
+    this.logger.log(`Hmac: ${hmac.toString('base64')}`);
+    this.logger.log(`Encrypted: ${encrypted.toString('base64')}`);
 
     if (!hmac.equals(transitHmac)) {
       throw new Error('Incorrect passphrase');
