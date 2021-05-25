@@ -1,0 +1,13 @@
+[Unit]
+Description=Encodot api
+After=network.target
+
+[Service]
+Environment=NODE_ENV=production
+Type=simple
+User=johannes
+WorkingDirectory=/var/www/encodot-api
+ExecStart=node main.js
+
+[Install]
+WantedBy=multi-user.target
