@@ -7,15 +7,15 @@ import { ApiLogger } from '../logger/api-logger';
 import { AesService } from './aes/aes.service';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetMessageDto } from './dto/get-message.dto';
-import { Key } from './key.entity';
-import { KeyRepository } from './key.repository';
+import { KeyService } from './key.service';
 import { MessageRepository } from './message.repository';
 import { EncryptionConfig } from './models/encryption-config.model';
+import { Key } from './models/key.model';
 import { MessageMetadata } from './models/message-metadata.model';
 import { MessageResult } from './models/message-result.model';
 import { TasksConfig } from './models/tasks-config.model';
 
-const { rsaKeyLength, urlKeyLength } = config.get<EncryptionConfig>('encryption');
+const { urlKeyLength } = config.get<EncryptionConfig>('encryption');
 const { messageLifetimeSeconds } = config.get<TasksConfig>('tasks');
 
 @Injectable()
@@ -24,32 +24,20 @@ export class MessageService {
   public constructor(
     private logger: ApiLogger,
     @InjectRepository(MessageRepository) private msgRepo: MessageRepository,
-    @InjectRepository(KeyRepository) private keyRepo: KeyRepository,
-    private aes: AesService
+    private aes: AesService,
+    private keySv: KeyService
   ) {
     logger.setContext('MessageService');
   }
 
   public async getKey(): Promise<Key> {
-    const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair(rsaKeyLength);
-
-    const privateKeyPem = forge.pki.privateKeyToPem(privateKey);
-    const publicKeyPem = forge.pki.publicKeyToPem(publicKey);
-    
-    const key = await this.keyRepo.saveKey(privateKeyPem);
-    key.key = publicKeyPem;
-    return key;
+    return {
+      key: this.keySv.getPublicKey()
+    };
   }
 
-  public async addMessage(addMessageDto: AddMessageDto): Promise<MessageMetadata> {
-    const { keyId } = addMessageDto;
-
-    const key = await this.keyRepo.getKey(keyId);
-    if (!key) {
-      throw new BadRequestException('No such private key');
-    }
-    
-    const { message, password } = this.decryptPartial(addMessageDto, [ 'message', 'password' ], key.key);
+  public async addMessage(addMessageDto: AddMessageDto): Promise<MessageMetadata> {    
+    const { message, password } = this.keySv.decryptPartial(addMessageDto, [ 'message', 'password' ]);
 
     const urlPassword = randomBytes(urlKeyLength).toString('base64');
 
@@ -70,14 +58,8 @@ export class MessageService {
   }
 
   public async getMessage(getMessageDto: GetMessageDto): Promise<MessageResult> {
-    const { publicKey, keyId } = getMessageDto;
-
-    const key = await this.keyRepo.getKey(keyId);
-    if (!key) {
-      throw new BadRequestException('No such private key');
-    }
-
-    const { messageId, password, urlPassword } = this.decryptPartial(getMessageDto, [ 'messageId', 'password', 'urlPassword' ], key.key);
+    const { publicKey } = getMessageDto;
+    const { messageId, password, urlPassword } = this.keySv.decryptPartial(getMessageDto, [ 'messageId', 'password', 'urlPassword' ]);
 
     const message = await this.msgRepo.getMessage(messageId);
     if (!message) {
@@ -102,18 +84,6 @@ export class MessageService {
     } catch (error) {
       throw new BadRequestException('Could not encrypt the clear text message with the supplied public key.');
     }
-  }
-
-  private decryptPartial<T>(obj: T, properties: string[], privateKeyPem: string): Partial<T> {
-    const newObj = {};
-    const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
-
-    for (const [ key, val ] of Object.entries(obj).filter(([ key ]) => properties.includes(key))) {
-      const decryptedVal = privateKey.decrypt(forge.util.decode64(val));
-      newObj[key] = decryptedVal;
-    }
-
-    return newObj;
   }
 
 }

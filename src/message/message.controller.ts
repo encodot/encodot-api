@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Post, ValidationPipe } from '@nestjs/common';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetMessageDto } from './dto/get-message.dto';
-import { Key } from './key.entity';
 import { MessageService } from './message.service';
+import { Key } from './models/key.model';
 import { MessageMetadata } from './models/message-metadata.model';
 import { MessageResult } from './models/message-result.model';
 
