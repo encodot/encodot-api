@@ -13,8 +13,10 @@ import { MessageRepository } from './message.repository';
 import { EncryptionConfig } from './models/encryption-config.model';
 import { MessageMetadata } from './models/message-metadata.model';
 import { MessageResult } from './models/message-result.model';
+import { TasksConfig } from './models/tasks-config.model';
 
 const { rsaKeyLength, urlKeyLength } = config.get<EncryptionConfig>('encryption');
+const { messageLifetimeSeconds } = config.get<TasksConfig>('tasks');
 
 @Injectable()
 export class MessageService {
@@ -44,20 +46,26 @@ export class MessageService {
 
     const key = await this.keyRepo.getKey(keyId);
     if (!key) {
-      throw new BadRequestException();
+      throw new BadRequestException('No such private key');
     }
     
     const { message, password } = this.decryptPartial(addMessageDto, [ 'message', 'password' ], key.key);
 
     const urlPassword = randomBytes(urlKeyLength).toString('base64');
 
+    let transitMsg: string;
     try {
-      const transitMsg = await this.aes.encrypt(message, urlPassword + password);
+      transitMsg = await this.aes.encrypt(message, urlPassword + password);
+    } catch (error) {
+      throw new BadRequestException('Could not encrypt the message');
+    }
+
+    try {
       const entity = await this.msgRepo.addMessage(transitMsg);
 
       return { id: entity.id, urlPassword };
     } catch (error) {
-      throw new BadRequestException(); 
+      throw new BadRequestException('Could not save the transit message'); 
     }
   }
 
@@ -66,27 +74,33 @@ export class MessageService {
 
     const key = await this.keyRepo.getKey(keyId);
     if (!key) {
-      throw new BadRequestException();
+      throw new BadRequestException('No such private key');
     }
 
     const { messageId, password, urlPassword } = this.decryptPartial(getMessageDto, [ 'messageId', 'password', 'urlPassword' ], key.key);
 
     const message = await this.msgRepo.getMessage(messageId);
     if (!message) {
-      throw new BadRequestException();
+      throw new BadRequestException(`No such message. Hint: Messages get automatically deleted after ${messageLifetimeSeconds} seconds!`);
     }
 
     // await this.msgRepo.deleteMessage(messageId); // Delete message always, even if the passphrase is incorrect.
 
     const rsa = forge.pki.publicKeyFromPem(publicKey);
 
+    let clearText: string;
     try {
-      const clearText = await this.aes.decrypt(message.message, urlPassword + password);
+      clearText = await this.aes.decrypt(message.message, urlPassword + password);
+    } catch (error) {
+      throw new BadRequestException('Could not decrypt the message. Maybe an incorrect password.');
+    }
+
+    try {
       const rsaEncrypted = forge.util.encode64(rsa.encrypt(clearText));
 
       return { message: rsaEncrypted };
     } catch (error) {
-      throw new BadRequestException();
+      throw new BadRequestException('Could not encrypt the clear text message with the supplied public key.');
     }
   }
 
