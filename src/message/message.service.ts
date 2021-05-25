@@ -74,7 +74,7 @@ export class MessageService {
     try {
       clearText = await this.aes.decrypt(message.message, urlPassword + password);
     } catch (error) {
-      throw new BadRequestException('Could not decrypt the message. Maybe an incorrect password.');
+      throw new BadRequestException(`Could not decrypt the message. Maybe an incorrect password: ${error.message}`);
     }
 
     try {
