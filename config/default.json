@@ -1,7 +1,7 @@
 {
   "port": 3000,
   "db": {
-    "host": "encodot-db",
+    "host": "localhost",
     "port": 5432,
     "database": "encodot",
     "username": "encodot",
@@ -28,7 +28,7 @@
     "rsaKeyLength": 2048
   },
   "tasks": {
-    "keyLifetimeSeconds": 60,
+    "keyLifetimeSeconds": 600,
     "messageLifetimeSeconds": 36000
   }
 }

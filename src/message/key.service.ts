@@ -1,9 +1,10 @@
 import { Injectable, Scope } from '@nestjs/common';
-import * as forge from 'node-forge';
 import * as config from 'config';
-import { EncryptionConfig } from './models/encryption-config.model';
+import * as moment from 'moment';
 import { Moment } from 'moment';
-import moment from 'moment';
+import * as forge from 'node-forge';
+import { ApiLogger } from '../logger/api-logger';
+import { EncryptionConfig } from './models/encryption-config.model';
 import { TasksConfig } from './models/tasks-config.model';
 
 const { rsaKeyLength } = config.get<EncryptionConfig>('encryption');
@@ -15,11 +16,18 @@ export class KeyService {
   private keyPair: forge.pki.rsa.KeyPair;
   private keyPairTimestamp: Moment;
 
+  public constructor(
+    private logger: ApiLogger
+  ) {
+    logger.setContext('KeyService');
+  }
+
   private checkKeyPair(): void {
     const minDate = moment().utcOffset(0);
     minDate.subtract(keyLifetimeSeconds, 'seconds');
 
     if (!this.keyPair || !!this.keyPairTimestamp?.isBefore(minDate)) {
+      this.logger.log('Generating new key pair');
       this.keyPair = forge.pki.rsa.generateKeyPair(rsaKeyLength);
       this.keyPairTimestamp = moment().utcOffset(0);
     }
