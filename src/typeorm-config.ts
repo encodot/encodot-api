@@ -1,6 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as config from 'config';
-import { Key } from './message/key.entity';
 import { Message } from './message/message.entity';
 
 const {
@@ -20,8 +19,7 @@ export const typeormConfig: TypeOrmModuleOptions = {
   username,
   password,
   entities: [
-    Message,
-    Key
+    Message
   ],
   synchronize
 };

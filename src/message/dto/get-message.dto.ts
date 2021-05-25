@@ -10,11 +10,6 @@ export class GetMessageDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(1)
-  public keyId: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(1)
   public messageId: string;
 
   @IsNotEmpty()
