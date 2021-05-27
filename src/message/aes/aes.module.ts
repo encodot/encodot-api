@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { LoggerModule } from '../../logger/logger.module';
 import { AesService } from './aes.service';
 
 @Module({
@@ -7,6 +8,9 @@ import { AesService } from './aes.service';
   ],
   exports: [
     AesService
+  ],
+  imports: [
+    LoggerModule
   ]
 })
 export class AesModule {}
