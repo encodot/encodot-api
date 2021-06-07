@@ -1,5 +1,5 @@
 export interface TransitMsg {
-  hmac: Buffer;
+  // hmac: Buffer;
   salt: Buffer;
   iv: Buffer;
   encrypted: Buffer;

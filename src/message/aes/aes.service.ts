@@ -39,19 +39,19 @@ export class AesService {
   }
   
   public async decrypt(transitMsg: string, password: string): Promise<string> {
-    const { hmac: transitHmac, salt, iv, encrypted } = this.parseTransitMsg(transitMsg);
+    const { /*hmac: transitHmac,*/ salt, iv, encrypted } = this.parseTransitMsg(transitMsg);
     const key = await this.deriveKeyFromPassword(password, salt);
 
     const hmac = createHmac('sha256', password).update(encrypted).digest();
 
     this.logger.log(`Password: ${password}`);
-    this.logger.log(`Transit hmac: ${transitHmac.toString('base64')}`);
+    // this.logger.log(`Transit hmac: ${transitHmac.toString('base64')}`);
     this.logger.log(`Hmac: ${hmac.toString('base64')}`);
     this.logger.log(`Encrypted: ${encrypted.toString('base64')}`);
 
-    if (!hmac.equals(transitHmac)) {
-      throw new Error('Incorrect passphrase');
-    }
+    // if (!hmac.equals(transitHmac)) {
+    //   throw new Error('Incorrect passphrase');
+    // }
 
     const decipher = createDecipheriv('aes-256-cbc', key, iv);
     const decrypted = Buffer.concat([
@@ -67,17 +67,17 @@ export class AesService {
   }
 
   private getTransitMsgStr(hmac: Buffer, salt: Buffer, iv: Buffer, encrypted: Buffer): string {
-    return Buffer.concat([ hmac, salt, iv, encrypted ]).toString('base64');
+    return Buffer.concat([ /*hmac,*/ salt, iv, encrypted ]).toString('base64');
   }
 
   private parseTransitMsg(transitMsg: string): TransitMsg {
     const transitBuf = Buffer.from(transitMsg, 'base64');
-    const hmac = transitBuf.slice(0, 32);
-    const salt = transitBuf.slice(32, 48);
-    const iv = transitBuf.slice(48, 64);
-    const encrypted = transitBuf.slice(64);
+    // const hmac = transitBuf.slice(0, 32);
+    const salt = transitBuf.slice(0, 16); // (32, 48);
+    const iv = transitBuf.slice(16, 32); // (48, 64);
+    const encrypted = transitBuf.slice(32); // (64);
 
-    return { hmac, salt, iv, encrypted };
+    return { salt, iv, encrypted }; // , hmac };
   }
 
 }
