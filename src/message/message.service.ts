@@ -39,7 +39,7 @@ export class MessageService {
   public async addMessage(addMessageDto: AddMessageDto): Promise<MessageMetadata> {    
     const { message, password } = this.keySv.decryptPartial(addMessageDto, [ 'message', 'password' ]);
 
-    const urlPassword = randomBytes(urlKeyLength).toString('base64');
+    const urlPassword = randomBytes(urlKeyLength).toString('hex');
 
     let transitMsg: string;
     try {
