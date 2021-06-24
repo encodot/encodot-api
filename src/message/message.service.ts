@@ -78,7 +78,7 @@ export class MessageService {
     }
 
     try {
-      const rsaEncrypted = forge.util.encode64(rsa.encrypt(clearText));
+      const rsaEncrypted = forge.util.encode64(rsa.encrypt(forge.util.encodeUtf8(clearText)));
 
       return { message: rsaEncrypted };
     } catch (error) {

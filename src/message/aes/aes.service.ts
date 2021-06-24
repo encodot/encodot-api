@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { createCipheriv, createDecipheriv, createHmac, randomBytes, scrypt } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
 import { ApiLogger } from '../../logger/api-logger';
 import { TransitMsg } from './models/transit-msg.model';
@@ -27,31 +27,14 @@ export class AesService {
       cipher.final()
     ]);
 
-    const hmac = createHmac('sha256', password).update(encrypted).digest();
-
-    this.logger.log(`Password: ${password}`);
-    this.logger.log(`Hmac: ${hmac.toString('base64')}`);
-    this.logger.log(`Encrypted: ${encrypted.toString('base64')}`);
-
     encrypted.toString('base64');
 
-    return this.getTransitMsgStr(hmac, salt, iv, encrypted);
+    return this.getTransitMsgStr(salt, iv, encrypted);
   }
   
   public async decrypt(transitMsg: string, password: string): Promise<string> {
-    const { /*hmac: transitHmac,*/ salt, iv, encrypted } = this.parseTransitMsg(transitMsg);
+    const { salt, iv, encrypted } = this.parseTransitMsg(transitMsg);
     const key = await this.deriveKeyFromPassword(password, salt);
-
-    const hmac = createHmac('sha256', password).update(encrypted).digest();
-
-    this.logger.log(`Password: ${password}`);
-    // this.logger.log(`Transit hmac: ${transitHmac.toString('base64')}`);
-    this.logger.log(`Hmac: ${hmac.toString('base64')}`);
-    this.logger.log(`Encrypted: ${encrypted.toString('base64')}`);
-
-    // if (!hmac.equals(transitHmac)) {
-    //   throw new Error('Incorrect passphrase');
-    // }
 
     const decipher = createDecipheriv('aes-256-cbc', key, iv);
     const decrypted = Buffer.concat([
@@ -66,18 +49,17 @@ export class AesService {
     return (await promisify(scrypt)(password, salt, 32)) as Buffer;
   }
 
-  private getTransitMsgStr(hmac: Buffer, salt: Buffer, iv: Buffer, encrypted: Buffer): string {
-    return Buffer.concat([ /*hmac,*/ salt, iv, encrypted ]).toString('base64');
+  private getTransitMsgStr(salt: Buffer, iv: Buffer, encrypted: Buffer): string {
+    return Buffer.concat([ salt, iv, encrypted ]).toString('base64');
   }
 
   private parseTransitMsg(transitMsg: string): TransitMsg {
     const transitBuf = Buffer.from(transitMsg, 'base64');
-    // const hmac = transitBuf.slice(0, 32);
-    const salt = transitBuf.slice(0, 16); // (32, 48);
-    const iv = transitBuf.slice(16, 32); // (48, 64);
-    const encrypted = transitBuf.slice(32); // (64);
+    const salt = transitBuf.slice(0, 16);
+    const iv = transitBuf.slice(16, 32);
+    const encrypted = transitBuf.slice(32);
 
-    return { salt, iv, encrypted }; // , hmac };
+    return { salt, iv, encrypted };
   }
 
 }

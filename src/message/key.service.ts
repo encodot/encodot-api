@@ -43,7 +43,7 @@ export class KeyService {
     const newObj = {};
 
     for (const [ key, val ] of Object.entries(obj).filter(([ key ]) => properties.includes(key))) {
-      const decryptedVal = this.keyPair.privateKey.decrypt(forge.util.decode64(val));
+      const decryptedVal = forge.util.decodeUtf8(this.keyPair.privateKey.decrypt(forge.util.decode64(val)));
       newObj[key] = decryptedVal;
     }
 
