@@ -82,6 +82,7 @@ export class MessageService {
 
       return { message: rsaEncrypted };
     } catch (error) {
+      this.logger.error('Could not encrypt the clear text message with the supplied public key', error.toString());
       throw new BadRequestException('Could not encrypt the clear text message with the supplied public key.');
     }
   }
