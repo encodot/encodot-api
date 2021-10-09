@@ -7,6 +7,8 @@ import { ApiLogger } from '../logger/api-logger';
 import { AesService } from './aes/aes.service';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetMessageDto } from './dto/get-message.dto';
+import { GetTransactionKeyDto } from './dto/get-transaction-key.dto';
+import { KeyStoreService } from './key-store.service';
 import { KeyService } from './key.service';
 import { MessageRepository } from './message.repository';
 import { EncryptionConfig } from './models/encryption-config.model';
@@ -25,15 +27,20 @@ export class MessageService {
     private logger: ApiLogger,
     @InjectRepository(MessageRepository) private msgRepo: MessageRepository,
     private aes: AesService,
-    private keySv: KeyService
+    private keySv: KeyService,
+    private keyStoreSv: KeyStoreService
   ) {
     logger.setContext('MessageService');
   }
 
-  public async getKey(): Promise<Key> {
-    return {
-      key: this.keySv.getPublicKey()
-    };
+  public async getTransactionKey(dto: GetTransactionKeyDto): Promise<Key> {
+    this.logger.log('Get transaction key');
+    const [ id, key ] = this.keyStoreSv.genKey();
+
+    const publicKey = forge.pki.publicKeyFromPem(dto.publicKey);
+    const keyCipher = forge.util.encode64(publicKey.encrypt(key));
+
+    return { id, key: keyCipher };
   }
 
   public async addMessage(addMessageDto: AddMessageDto): Promise<MessageMetadata> {    
