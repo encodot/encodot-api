@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '../logger/logger.module';
 import { AesModule } from './aes/aes.module';
+import { Base64Module } from './base64/base64.module';
 import { KeyStoreService } from './key-store.service';
 import { MessageTasksService } from './message-tasks.service';
 import { MessageController } from './message.controller';
@@ -14,7 +15,8 @@ import { MessageService } from './message.service';
     TypeOrmModule.forFeature([
       MessageRepository
     ]),
-    AesModule
+    AesModule,
+    Base64Module
   ],
   providers: [
     MessageService,

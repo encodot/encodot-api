@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as config from 'config';
-import { randomBytes } from 'crypto';
 import * as forge from 'node-forge';
 import { ApiLogger } from '../logger/api-logger';
 import { AesService } from './aes/aes.service';
+import { Base64Service } from './base64/base64.service';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetMessageDto } from './dto/get-message.dto';
 import { GetTransactionKeyDto } from './dto/get-transaction-key.dto';
@@ -26,6 +26,7 @@ export class MessageService {
     private logger: ApiLogger,
     @InjectRepository(MessageRepository) private msgRepo: MessageRepository,
     private aes: AesService,
+    private b64: Base64Service,
     private keyStoreSv: KeyStoreService
   ) {
     logger.setContext('MessageService');
@@ -46,8 +47,7 @@ export class MessageService {
     const key = this.keyStoreSv.getKey(dto.keyId);
     const { message, password } = this.aes.decryptObj(dto, key, [ 'message', 'password' ]);
 
-    // TODO(): Refactor to base64url with forge.
-    const urlPassword = randomBytes(urlKeyLength).toString('base64');
+    const urlPassword = this.b64.encodeUrl(forge.random.getBytesSync(urlKeyLength));
 
     let transitMsg: string;
     try {

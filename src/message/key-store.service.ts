@@ -1,10 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { randomBytes } from 'crypto';
+import * as forge from 'node-forge';
+import { Base64Service } from './base64/base64.service';
 
 @Injectable()
 export class KeyStoreService {
 
   private keys = new Map<number, string>();
+
+  public constructor(
+    private b64: Base64Service
+  ) {}
 
   private getNextId(): number {
     while (true) {
@@ -17,7 +22,7 @@ export class KeyStoreService {
 
   public genKey(): [ number, string ] {
     const id = this.getNextId();
-    const key = randomBytes(64).toString('base64');
+    const key = this.b64.encodeUrl(forge.random.getBytesSync(64));
 
     this.keys.set(id, key);
     return [ id, key ];
