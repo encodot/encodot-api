@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 
 @Injectable()
@@ -23,12 +23,12 @@ export class KeyStoreService {
     return [ id, key ];
   }
 
-  public getKey(id: number): [ number, string ] {
-    if (this.keys.has(id)) {
-      throw new Error('No such key!');
+  public getKey(id: number): string {
+    if (!this.keys.has(id)) {
+      throw new BadRequestException('No such key!');
     }
 
-    return [ id, this.keys.get(id) ];
+    return this.keys.get(id);
   }
 
 }
