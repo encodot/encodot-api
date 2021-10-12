@@ -1,65 +1,148 @@
 import { Injectable } from '@nestjs/common';
-import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
-import { promisify } from 'util';
-import { ApiLogger } from '../../logger/api-logger';
-import { TransitMsg } from './models/transit-msg.model';
+import * as forge from 'node-forge';
+
+interface TransitMsg {
+  salt: string;
+  iv: string;
+  encrypted: string;
+}
 
 @Injectable()
 export class AesService {
 
-  public constructor(
-    private logger: ApiLogger
-  ) {
-    logger.setContext('AesService');
-  }
+  private readonly typePrefixes = new Map([
+    [ 'string', 's' ],
+    [ 'number', 'n' ],
+    [ 'boolean', 'b' ]
+  ]);
+  private readonly typeSeperator = '.'; // Using the dot as it is url safe.
 
-  public async encrypt(message: string, password: string): Promise<string> {    
-    const salt = randomBytes(16);
-    const iv = randomBytes(16);
+  public encrypt(message: string, password: string): string {
+    const salt = forge.random.getBytesSync(16);
+    const iv = forge.random.getBytesSync(16);
 
     // The key length is dependent on the algorithm.
     // In this case for aes256, it is 32 bytes.
-    const key = await this.deriveKeyFromPassword(password, salt);
-    const cipher = createCipheriv('aes-256-cbc', key, iv);
+    const key = this.deriveKeyFromPassword(forge.util.encodeUtf8(password), salt);
 
-    const encrypted = Buffer.concat([
-      cipher.update(message),
-      cipher.final()
-    ]);
+    const cipher = forge.cipher.createCipher('AES-CBC', key);
 
-    encrypted.toString('base64');
+    cipher.start({ iv });
+    cipher.update(forge.util.createBuffer(forge.util.encodeUtf8(message)));
+    cipher.finish();
 
+    const encrypted = cipher.output.getBytes();
     return this.getTransitMsgStr(salt, iv, encrypted);
   }
-  
-  public async decrypt(transitMsg: string, password: string): Promise<string> {
+
+  public decrypt(transitMsg: string, password: string): string {
     const { salt, iv, encrypted } = this.parseTransitMsg(transitMsg);
-    const key = await this.deriveKeyFromPassword(password, salt);
+    const key = this.deriveKeyFromPassword(forge.util.encodeUtf8(password), salt);
 
-    const decipher = createDecipheriv('aes-256-cbc', key, iv);
-    const decrypted = Buffer.concat([
-      decipher.update(encrypted),
-      decipher.final(),
-    ]);
-    
-    return decrypted.toString('utf8');
+    const decipher = forge.cipher.createDecipher('AES-CBC', key);
+
+    decipher.start({ iv });
+    decipher.update(forge.util.createBuffer(encrypted, 'raw'));
+    decipher.finish();
+
+    return forge.util.decodeUtf8(decipher.output.getBytes());
   }
 
-  private async deriveKeyFromPassword(password: string, salt: Buffer): Promise<Buffer> {
-    return (await promisify(scrypt)(password, salt, 32)) as Buffer;
+  public encryptTyped(val: string | number | boolean, password: string): string {
+    if (val == null) {
+      return val as string;
+    }
+
+    const prefix = this.typePrefixes.get(typeof(val));
+    if (prefix == null) { // Matches undefined due to ==
+      throw new Error(`Unsupported type ${typeof(val)}`);
+    }
+
+    return prefix + this.encrypt(val.toString(), password);
   }
 
-  private getTransitMsgStr(salt: Buffer, iv: Buffer, encrypted: Buffer): string {
-    return Buffer.concat([ salt, iv, encrypted ]).toString('base64');
+  public decryptTyped(typedTransitMsg: string, password: string): string | number | boolean {
+    if (typedTransitMsg == null) {
+      return typedTransitMsg;
+    }
+
+    const typePrefix = typedTransitMsg[0];
+    const transitMsg = typedTransitMsg.slice(1);
+
+    const type = [...this.typePrefixes.entries()].find(([key, val]) => val === typePrefix)?.[0];
+
+    if (type == null) {
+      throw new Error('No properly formated typed transit message');
+    }
+
+    const valStr = this.decrypt(transitMsg, password);
+
+    if (type === 'number') {
+      return +valStr;
+    } else if (type === 'boolean') {
+      return valStr === 'true';
+    }
+
+    return valStr;
+  }
+
+  public encryptObj<T>(obj: T, password: string, properties: (keyof T)[]): T {
+    const entries: [keyof T, string][] = (Object.entries(obj) as [keyof T, any])
+      .map(([ key, val ]) => {
+        const newVal = properties.includes(key)
+          ? this.encryptTyped(val, password)
+          : val;
+
+        return [ key, newVal ];
+      });
+
+    return Object.fromEntries(entries) as unknown as T;
+  }
+
+  public decryptObj<T>(obj: T, password: string, properties: (keyof T)[]): T {
+    const entries: [keyof T, string][] = (Object.entries(obj) as [keyof T, any])
+      .map(([ key, val ]) => {
+        const newVal = properties.includes(key)
+          ? this.decryptTyped(val, password)
+          : val;
+
+        return [ key, newVal ];
+      });
+
+    return Object.fromEntries(entries) as unknown as T;
+  }
+
+  private deriveKeyFromPassword(password: string, salt: string): string {
+    const md = forge.md.sha256.create();
+    return forge.pkcs5.pbkdf2(password, salt, 15000, 32, md);
+  }
+
+  private getTransitMsgStr(salt: string, iv: string, encrypted: string): string {
+    return this.encodeUrlBase64(salt + iv + encrypted);
   }
 
   private parseTransitMsg(transitMsg: string): TransitMsg {
-    const transitBuf = Buffer.from(transitMsg, 'base64');
-    const salt = transitBuf.slice(0, 16);
-    const iv = transitBuf.slice(16, 32);
-    const encrypted = transitBuf.slice(32);
+    const byteStr = this.decodeUrlBase64(transitMsg);
+    const salt = byteStr.slice(0, 16);
+    const iv = byteStr.slice(16, 32);
+    const encrypted = byteStr.slice(32);
 
     return { salt, iv, encrypted };
+  }
+
+  private encodeUrlBase64(bytes: string): string {
+    const base64 = forge.util.encode64(bytes);
+    return base64.replace('+', '-').replace('/', '_').replace(/=+$/, '');
+  }
+
+  private decodeUrlBase64(urlBase64: string): string {
+    let base64 = urlBase64.replace('-', '+').replace('_', '/');
+
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+
+    return forge.util.decode64(base64);
   }
 
 }
