@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Post, ValidationPipe } from '@nestjs/common';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetMessageDto } from './dto/get-message.dto';
 import { GetTransactionKeyDto } from './dto/get-transaction-key.dto';
@@ -14,7 +14,7 @@ export class MessageController {
     private messageSv: MessageService
   ) {}
 
-  @Get('transaction-key')
+  @Post('transaction-key')
   public async getTransactionKey(@Body(ValidationPipe) dto: GetTransactionKeyDto): Promise<Key> {
     return await this.messageSv.getTransactionKey(dto);
   }

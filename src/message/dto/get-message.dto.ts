@@ -1,11 +1,10 @@
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
 
 export class GetMessageDto {
 
   @IsNotEmpty()
-  @IsString()
-  @MinLength(1)
-  public publicKey: string;
+  @IsNumber()
+  public keyId: number;
 
   @IsNotEmpty()
   @IsString()

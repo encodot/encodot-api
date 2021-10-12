@@ -41,57 +41,49 @@ export class MessageService {
     return { id, key: keyCipher };
   }
 
-  public async addMessage(addMessageDto: AddMessageDto): Promise<MessageMetadata> {
-    return null;
-    // const { message, password } = {}; // this.keySv.decryptPartial(addMessageDto, [ 'message', 'password' ]);
+  public async addMessage(dto: AddMessageDto): Promise<MessageMetadata> {
+    this.logger.log('Add message');
+    const key = this.keyStoreSv.getKey(dto.keyId);
+    const { message, password } = this.aes.decryptObj(dto, key, [ 'message', 'password' ]);
 
-    // const urlPassword = randomBytes(urlKeyLength).toString('hex');
+    // TODO(): Refactor to base64url with forge.
+    const urlPassword = randomBytes(urlKeyLength).toString('base64');
 
-    // let transitMsg: string;
-    // try {
-    //   transitMsg = await this.aes.encrypt(message, urlPassword + password);
-    // } catch (error) {
-    //   throw new BadRequestException('Could not encrypt the message');
-    // }
+    let transitMsg: string;
+    try {
+      transitMsg = this.aes.encrypt(message, urlPassword + password);
+    } catch (error) {
+      throw new BadRequestException('Could not encrypt the message');
+    }
 
-    // try {
-    //   const entity = await this.msgRepo.addMessage(transitMsg);
+    try {
+      const entity = await this.msgRepo.addMessage(transitMsg);
 
-    //   return { id: entity.id, urlPassword };
-    // } catch (error) {
-    //   throw new BadRequestException('Could not save the transit message'); 
-    // }
+      return this.aes.encryptObj({ id: entity.id, urlPassword }, key, [ 'id', 'urlPassword' ]);
+    } catch (error) {
+      throw new BadRequestException('Could not save the transit message'); 
+    }
   }
 
-  public async getMessage(getMessageDto: GetMessageDto): Promise<MessageResult> {
-    return null;
-    // const { publicKey } = getMessageDto;
-    // const { messageId, password, urlPassword } = this.keySv.decryptPartial(getMessageDto, [ 'messageId', 'password', 'urlPassword' ]);
+  public async getMessage(dto: GetMessageDto): Promise<MessageResult> {
+    const key = this.keyStoreSv.getKey(dto.keyId);
+    const { messageId, password, urlPassword } = this.aes.decryptObj(dto, key, [ 'messageId', 'password', 'urlPassword' ]);
 
-    // const message = await this.msgRepo.getMessage(messageId);
-    // if (!message) {
-    //   throw new BadRequestException(`No such message. Hint: Messages get automatically deleted after ${messageLifetimeSeconds} seconds!`);
-    // }
+    const message = await this.msgRepo.getMessage(messageId);
+    if (!message) {
+      throw new BadRequestException(`No such message. Hint: Messages get automatically deleted after ${messageLifetimeSeconds} seconds!`);
+    }
 
-    // // await this.msgRepo.deleteMessage(messageId); // Delete message always, even if the passphrase is incorrect.
+    // await this.msgRepo.deleteMessage(messageId); // Delete message always, even if the passphrase is incorrect.
 
-    // const rsa = forge.pki.publicKeyFromPem(publicKey);
+    let clearText: string;
+    try {
+      clearText = this.aes.decrypt(message.message, urlPassword + password);
+    } catch (error) {
+      throw new BadRequestException();
+    }
 
-    // let clearText: string;
-    // try {
-    //   clearText = await this.aes.decrypt(message.message, urlPassword + password);
-    // } catch (error) {
-    //   throw new BadRequestException(`Could not decrypt the message. Maybe an incorrect password: ${error.message}`);
-    // }
-
-    // try {
-    //   const rsaEncrypted = forge.util.encode64(rsa.encrypt(forge.util.encodeUtf8(clearText)));
-
-    //   return { message: rsaEncrypted };
-    // } catch (error) {
-    //   this.logger.error('Could not encrypt the clear text message with the supplied public key', error.toString());
-    //   throw new BadRequestException('Could not encrypt the clear text message with the supplied public key.');
-    // }
+    return this.aes.encryptObj({ message: clearText }, key, [ 'message' ]);
   }
 
 }

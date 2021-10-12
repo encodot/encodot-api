@@ -1,6 +1,10 @@
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
 
 export class AddMessageDto {
+
+  @IsNotEmpty()
+  @IsNumber()
+  public keyId: number;
 
   @IsNotEmpty()
   @IsString()
