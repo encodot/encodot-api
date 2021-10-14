@@ -13,6 +13,6 @@
     }
   },
   "db": {
-    "host": "localhost"
+    "host": "encodot-db"
   }
 }

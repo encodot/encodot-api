@@ -1,18 +1,16 @@
-FROM node:15.13-slim AS development
-
-RUN apt-get update && apt-get -y install procps
+FROM node:14-alpine AS development
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
 RUN npm run build
 
-FROM node:15.13-slim AS production
+FROM node:14-alpine AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
@@ -21,7 +19,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install --only=production
+RUN npm ci --production
 
 COPY . .
 
