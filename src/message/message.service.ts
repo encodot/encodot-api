@@ -54,7 +54,7 @@ export class MessageService {
       transitMsg = this.aes.encrypt(message, urlPassword + password);
     } catch (error) {
       this.logger.error('Could not encrypt the message', error);
-      throw new BadRequestException('Could not encrypt the message');
+      throw new BadRequestException();
     }
 
     try {
@@ -62,7 +62,7 @@ export class MessageService {
       return this.aes.encryptObj({ id: entity.id, urlPassword }, key, [ 'id', 'urlPassword' ]);
     } catch (error) {
       this.logger.error('Could not save the transit message', error);
-      throw new BadRequestException('Could not save the transit message'); 
+      throw new BadRequestException(); 
     }
   }
 
@@ -74,7 +74,7 @@ export class MessageService {
     const message = await this.msgRepo.getMessage(messageId);
     if (!message) {
       this.logger.error('Decryption failed', null, null, { messageId });
-      throw new BadRequestException(`No such message. Hint: Messages get automatically deleted after ${messageLifetimeSeconds} seconds!`);
+      throw new BadRequestException();
     }
 
     // await this.msgRepo.deleteMessage(messageId); // Delete message always, even if the passphrase is incorrect.
