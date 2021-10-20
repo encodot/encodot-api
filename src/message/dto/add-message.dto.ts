@@ -10,9 +10,7 @@ export class AddMessageDto {
   @MinLength(1)
   public message: string;
 
-  @IsNotEmpty()
   @IsString()
-  @MinLength(1)
   public password: string;
 
 }

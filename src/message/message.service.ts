@@ -48,10 +48,11 @@ export class MessageService {
     const { message, password } = this.aes.decryptObj(dto, key, [ 'message', 'password' ]);
 
     const urlPassword = this.b64.encodeUrl(forge.random.getBytesSync(urlKeyLength));
+    const combinedPassword = this.getCombinedPassword(urlPassword, password);
 
     let transitMsg: string;
     try {
-      transitMsg = this.aes.encrypt(message, urlPassword + password);
+      transitMsg = this.aes.encrypt(message, combinedPassword);
     } catch (error) {
       this.logger.error('Could not encrypt the message', error);
       throw new BadRequestException();
@@ -79,15 +80,20 @@ export class MessageService {
 
     // await this.msgRepo.deleteMessage(messageId); // Delete message always, even if the passphrase is incorrect.
 
+    const combinedPassword = this.getCombinedPassword(urlPassword, password);
     let clearText: string;
     try {
-      clearText = this.aes.decrypt(message.message, urlPassword + password);
+      clearText = this.aes.decrypt(message.message, combinedPassword);
     } catch (error) {
       this.logger.error('Decryption failed', error, null, { messageId });
       throw new BadRequestException();
     }
 
     return this.aes.encryptObj({ message: clearText }, key, [ 'message' ]);
+  }
+
+  private getCombinedPassword(urlPassword: string, password: string): string {
+    return urlPassword + (password ?? '');
   }
 
 }

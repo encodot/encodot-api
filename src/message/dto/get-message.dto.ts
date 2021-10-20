@@ -10,9 +10,7 @@ export class GetMessageDto {
   @MinLength(1)
   public messageId: string;
 
-  @IsNotEmpty()
   @IsString()
-  @MinLength(1)
   public password: string;
 
   @IsNotEmpty()
