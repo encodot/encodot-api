@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class GetMessageDto {
 
@@ -7,15 +7,14 @@ export class GetMessageDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(1)
   public messageId: string;
 
+  @IsOptional()
   @IsString()
   public password: string;
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(1)
   public urlPassword: string;
 
 }

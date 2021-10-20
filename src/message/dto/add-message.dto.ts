@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class AddMessageDto {
 
@@ -7,9 +7,9 @@ export class AddMessageDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(1)
   public message: string;
 
+  @IsOptional()
   @IsString()
   public password: string;
 
