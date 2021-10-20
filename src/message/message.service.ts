@@ -53,24 +53,27 @@ export class MessageService {
     try {
       transitMsg = this.aes.encrypt(message, urlPassword + password);
     } catch (error) {
+      this.logger.error('Could not encrypt the message', error);
       throw new BadRequestException('Could not encrypt the message');
     }
 
     try {
       const entity = await this.msgRepo.addMessage(transitMsg);
-
       return this.aes.encryptObj({ id: entity.id, urlPassword }, key, [ 'id', 'urlPassword' ]);
     } catch (error) {
+      this.logger.error('Could not save the transit message', error);
       throw new BadRequestException('Could not save the transit message'); 
     }
   }
 
   public async getMessage(dto: GetMessageDto): Promise<MessageResult> {
+    this.logger.log('Get message', null, { messageId: dto.messageId });
     const key = this.keyStoreSv.getKey(dto.keyId);
     const { messageId, password, urlPassword } = this.aes.decryptObj(dto, key, [ 'messageId', 'password', 'urlPassword' ]);
 
     const message = await this.msgRepo.getMessage(messageId);
     if (!message) {
+      this.logger.error('Decryption failed', null, null, { messageId });
       throw new BadRequestException(`No such message. Hint: Messages get automatically deleted after ${messageLifetimeSeconds} seconds!`);
     }
 
@@ -80,6 +83,7 @@ export class MessageService {
     try {
       clearText = this.aes.decrypt(message.message, urlPassword + password);
     } catch (error) {
+      this.logger.error('Decryption failed', error, null, { messageId });
       throw new BadRequestException();
     }
 
