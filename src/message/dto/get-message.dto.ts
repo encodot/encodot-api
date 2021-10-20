@@ -1,10 +1,9 @@
-import { IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class GetMessageDto {
 
-  @IsNotEmpty()
-  @IsNumber()
-  public keyId: number;
+  @IsUUID(4)
+  public keyId: string;
 
   @IsNotEmpty()
   @IsString()
