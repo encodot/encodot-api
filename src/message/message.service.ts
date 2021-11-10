@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AesService } from '@shared/aes';
+import { Base64Service } from '@shared/base64';
 import * as config from 'config';
 import * as forge from 'node-forge';
 import { ApiLogger } from '../logger/api-logger';
-import { AesService } from './aes/aes.service';
-import { Base64Service } from './base64/base64.service';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetMessageDto } from './dto/get-message.dto';
 import { GetTransactionKeyDto } from './dto/get-transaction-key.dto';

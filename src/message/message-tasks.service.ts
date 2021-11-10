@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ApiLogger } from '../logger/api-logger';
-import { AesService } from './aes/aes.service';
-import { MessageRepository } from './message.repository';
+import { AesService } from '@shared/aes';
 import * as config from 'config';
+import { ApiLogger } from '../logger/api-logger';
+import { MessageRepository } from './message.repository';
 import { TasksConfig } from './models/tasks-config.model';
 
 const { messageLifetimeSeconds } = config.get<TasksConfig>('tasks');

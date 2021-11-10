@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import * as forge from 'node-forge';
-import { Base64Service } from './base64/base64.service';
+import { Base64Service } from '@shared/base64';
 import { randomUUID } from 'crypto';
+import * as forge from 'node-forge';
 
 @Injectable()
 export class KeyStoreService {

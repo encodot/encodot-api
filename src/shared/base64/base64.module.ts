@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '../../logger/logger.module';
 import { Base64Service } from './base64.service';
 
 @Module({
@@ -8,9 +7,6 @@ import { Base64Service } from './base64.service';
   ],
   exports: [
     Base64Service
-  ],
-  imports: [
-    LoggerModule
   ]
 })
 export class Base64Module {}

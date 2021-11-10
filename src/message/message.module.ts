@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AesModule } from '@shared/aes';
+import { Base64Module } from '@shared/base64';
 import { LoggerModule } from '../logger/logger.module';
-import { AesModule } from './aes/aes.module';
-import { Base64Module } from './base64/base64.module';
 import { KeyStoreService } from './key-store.service';
 import { MessageTasksService } from './message-tasks.service';
 import { MessageController } from './message.controller';
