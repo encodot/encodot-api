@@ -14,10 +14,8 @@ import { EncryptionConfig } from './models/encryption-config.model';
 import { Key } from './models/key.model';
 import { MessageMetadata } from './models/message-metadata.model';
 import { MessageResult } from './models/message-result.model';
-import { TasksConfig } from './models/tasks-config.model';
 
 const { urlKeyLength } = config.get<EncryptionConfig>('encryption');
-const { messageLifetimeSeconds } = config.get<TasksConfig>('tasks');
 
 @Injectable()
 export class MessageService {
@@ -74,11 +72,9 @@ export class MessageService {
 
     const message = await this.msgRepo.getMessage(messageId);
     if (!message) {
-      this.logger.error('Decryption failed', null, null, { messageId });
+      this.logger.error('No such message', null, null, { messageId });
       throw new BadRequestException();
     }
-
-    // await this.msgRepo.deleteMessage(messageId); // Delete message always, even if the passphrase is incorrect.
 
     const combinedPassword = this.getCombinedPassword(urlPassword, password);
     let clearText: string;
@@ -89,6 +85,7 @@ export class MessageService {
       throw new BadRequestException();
     }
 
+    await this.msgRepo.deleteMessage(messageId);
     return this.aes.encryptObj({ message: clearText }, key, [ 'message' ]);
   }
 
