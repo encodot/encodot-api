@@ -36,18 +36,6 @@ export class ApiLogger implements LoggerService {
       });
     }
 
-    if (loggerConfig.rotatingFile.enabled) {
-      const { level, path, period, count } = loggerConfig.rotatingFile;
-
-      streams.push({
-        type: 'rotating-file',
-        level: level ?? 'info',
-        path,
-        period,
-        count
-      });
-    }
-
     return streams;
   }
 
