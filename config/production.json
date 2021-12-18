@@ -3,13 +3,6 @@
     "console": {
       "enabled": true,
       "level": "debug"
-    },
-    "rotatingFile": {
-      "enabled": false,
-      "level": "info",
-      "path": "/var/log/encodot-api.log",
-      "period": "1d",
-      "count": 3
     }
   },
   "db": {

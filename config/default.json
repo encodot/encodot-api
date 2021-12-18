@@ -12,23 +12,12 @@
     "console": {
       "enabled": true,
       "level": "trace"
-    },
-    "rotatingFile": {
-      "enabled": false,
-      "level": "info",
-      "path": "/var/log/encodot-api.log",
-      "period": "1d",
-      "count": 3
     }
   },
   "encryption": {
-    "urlKeyLength": 40,
-    "aesKeyLength": 256,
-    "aesIterations": 100,
-    "rsaKeyLength": 2048
+    "urlKeyLength": 32
   },
   "tasks": {
-    "keyLifetimeSeconds": 600,
     "messageLifetimeSeconds": 36000
   }
 }
