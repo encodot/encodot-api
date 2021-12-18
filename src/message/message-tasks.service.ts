@@ -5,9 +5,8 @@ import { AesService } from '@shared/aes';
 import * as config from 'config';
 import { ApiLogger } from '../logger/api-logger';
 import { MessageRepository } from './message.repository';
-import { TasksConfig } from './models/tasks-config.model';
 
-const { messageLifetimeSeconds } = config.get<TasksConfig>('tasks');
+const messageLifetimeSeconds = config.get<number>('tasks.messageLifetimeSeconds');
 
 @Injectable()
 export class MessageTasksService {

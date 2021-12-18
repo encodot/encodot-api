@@ -10,12 +10,11 @@ import { GetMessageDto } from './dto/get-message.dto';
 import { GetTransactionKeyDto } from './dto/get-transaction-key.dto';
 import { KeyStoreService } from './key-store.service';
 import { MessageRepository } from './message.repository';
-import { EncryptionConfig } from './models/encryption-config.model';
 import { Key } from './models/key.model';
 import { MessageMetadata } from './models/message-metadata.model';
 import { MessageResult } from './models/message-result.model';
 
-const { urlKeyLength } = config.get<EncryptionConfig>('encryption');
+const urlKeyLength = config.get<number>('encryption.urlKeyLength');
 
 @Injectable()
 export class MessageService {
