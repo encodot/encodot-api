@@ -1,4 +1,4 @@
-FROM node:14-alpine AS development
+FROM node:16-alpine AS development
 
 WORKDIR /usr/src/app
 
@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:14-alpine AS production
+FROM node:16-alpine AS production
 
 EXPOSE 80
 
@@ -21,7 +21,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm ci --production
+RUN npm ci
 
 COPY . .
 
